@@ -8,25 +8,45 @@ class Mapnik(gtk.Image):
     def __init__(self):
         gtk.Image.__init__(self)
         
-        self.connect("show", self.onshow)
+        self.width = 200
+        self.height = 200
+        
+        self.map = mapnik.Map(self.width, self.height, '+proj=latlong +datum=WGS84')
+        self.map.background = mapnik.Color('steelblue')
 
-    def onshow(self, widget):
-        self.parent.connect("configure-event", self.onconfigure)
-        self.update()
+        self.createstyle()
+        self.rendermap()
         
-    def onconfigure(self, widget, allocation):
-        self.update()
+    def resize(self, rectangle):
+        if self.width == rectangle.width and self.height == rectangle.height: return
         
-    def update(self):
-        width = self.parent.allocation.width
-        height = self.parent.allocation.height
+        self.width = rectangle.width
+        self.height = rectangle.height
+        self.map.width = self.width
+        self.map.height = self.height
         
-        map = mapnik.Map(width,height,'+proj=latlong +datum=WGS84')
-        map.background = mapnik.Color('steelblue')
+        self.map.zoom_to_box(self.lyr.envelope())
         
-        aggimage = mapnik.Image(map.width, map.height)
-        mapnik.render(map, aggimage, 0, 0)
+        self.rendermap()
+    
+    def rendermap(self):
+        aggimage = mapnik.Image(self.map.width, self.map.height)
+        mapnik.render(self.map, aggimage, 0, 0)
         data = aggimage.tostring()
-        
-        pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, map.width, map.height, map.width * 4)
+        pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, self.map.width, self.map.height, self.map.width * 4)
         self.set_from_pixbuf(pixbuf)
+    
+    def createstyle(self):
+        s = mapnik.Style()
+        r = mapnik.Rule()
+        r.symbols.append(mapnik.PolygonSymbolizer(mapnik.Color('#f2eff9')))
+        r.symbols.append(mapnik.LineSymbolizer(mapnik.Color('rgb(50%,50%,50%)'),0.1))
+        s.rules.append(r)
+        self.map.append_style('My Style',s)
+
+        self.lyr = mapnik.Layer('world',"+proj=latlong +datum=WGS84")
+        self.lyr.datasource = mapnik.Shapefile(file='world_borders')
+        self.lyr.styles.append('My Style')
+        
+        self.map.layers.append(self.lyr)
+        self.map.zoom_to_box(self.lyr.envelope())
