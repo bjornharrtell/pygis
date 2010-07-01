@@ -2,28 +2,26 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
-from PyGIS.Widgets.Mapnik import Mapnik
+from PyGIS.Widgets.Map import Map
 
-class Client(object):
+"""
+Client application implemented upon a gtk.Window
+"""
+class Client(gtk.Window):
 
-    def __init__(self):
+    def __init__(self, windowtype):
+        gtk.Window.__init__(self, windowtype)
         
-        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
-        self.window.connect("destroy", self.destroy)
+        # needed to make it possible to resize to smaller size
+        self.set_geometry_hints(min_width=1, min_height=1)
         
-        self.layout = gtk.Layout()
-        self.window.add(self.layout)
+        self.connect("destroy", self.destroy)
+
+        mapnik = Map()
+        self.add(mapnik)
+
+        self.show_all()
         
-        self.mapnik = Mapnik()
-        self.layout.add(self.mapnik)
-
-        self.window.show_all()
-        
-        self.window.connect("size-allocate", self.onsizeallocate)
-
-    def onsizeallocate(self, widget, allocation):
-        self.mapnik.resize(allocation)
-
     def destroy(self, widget):
         gtk.main_quit()
 
@@ -31,5 +29,5 @@ class Client(object):
         gtk.main()
         
 if __name__ == "__main__":
-    client = Client()
+    client = Client(gtk.WINDOW_TOPLEVEL)
     client.main()
