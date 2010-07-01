@@ -2,7 +2,8 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 
-from PyGIS.Widgets.Map import Map
+from pygis.Widgets.Map import Map
+from pygis.Widgets.NavigationToolbar import NavigationToolbar
 
 """
 Client application implemented upon a gtk.Window
@@ -22,6 +23,11 @@ class Client(gtk.Window):
 
         menubar = gtk.MenuBar()
         vbox.pack_start(menubar, False, False, 0)
+        
+        handlebox = gtk.HandleBox()
+        navbar = NavigationToolbar()
+        handlebox.add(navbar)
+        vbox.pack_start(handlebox, False, False, 0)
         
         menuitemfile = gtk.MenuItem(label="File")
         menubar.add(menuitemfile)
