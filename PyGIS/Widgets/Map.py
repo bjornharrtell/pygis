@@ -13,27 +13,15 @@ class Map(gtk.Image):
     """
     def __init__(self):
         gtk.Image.__init__(self)
-        
-        self.image = self
-        #self.put(self.image, 0, 0)
 
-        self.width = 200
-        self.height = 200
+        self.width = 1
+        self.height = 1
         
         self.map = mapnik.Map(self.width, self.height, '+proj=latlong +datum=WGS84')
         self.map.background = mapnik.Color('steelblue')
 
         self.createstyle()
         self.rendermap()
-        
-        self.connect("size-allocate", self.onsizeallocate)
-    
-    """
-    Handler for size-allocate events to resize the map to parent dimensions
-    """
-    def onsizeallocate(self, widget, requisition):
-        #print(self.parent.allocation)
-        self.resize(self.parent.allocation)
 
     """
     Resize the map by zooming to the new dimensions then call render
@@ -58,7 +46,7 @@ class Map(gtk.Image):
         mapnik.render(self.map, aggimage, 0, 0)
         data = aggimage.tostring()
         pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, self.map.width, self.map.height, self.map.width * 4)
-        self.image.set_from_pixbuf(pixbuf)
+        self.set_from_pixbuf(pixbuf)
     
     """
     Create style and layer for the map from mapnik tutorial data
