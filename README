@@ -1,1 +1,7 @@
 I'm trying to figure out if using Mapnik and PyGTK could serve as a good basis for a high-level GIS-framwork and desktop client.
+
+Target Python version is 2.6
+
+To develop/run the following packages must be installed:
+PyGTK 2.17+
+Mapnik 0.7.0+

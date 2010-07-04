@@ -18,6 +18,8 @@ class Client(gtk.Window):
         
         self.connect("destroy", self.destroy)
         
+        self.map = Map()
+        
         vbox = gtk.VBox()
         self.add(vbox)
 
@@ -25,7 +27,7 @@ class Client(gtk.Window):
         vbox.pack_start(menubar, False, False, 0)
         
         handlebox = gtk.HandleBox()
-        navbar = NavigationToolbar()
+        navbar = NavigationToolbar(self.map)
         handlebox.add(navbar)
         vbox.pack_start(handlebox, False, False, 0)
         
@@ -41,8 +43,8 @@ class Client(gtk.Window):
         
         self.hbox = gtk.HBox()
         vbox.pack_start(self.hbox, True, True, 0)
-        self.mapnik = Map()
-        self.hbox.add(self.mapnik)
+        
+        self.hbox.add(self.map)
         self.hbox.connect("size-allocate", self.onsizeallocate)
         
         self.statusbar = gtk.Statusbar()
@@ -52,7 +54,7 @@ class Client(gtk.Window):
 
     def onsizeallocate(self, widget, event):
         #print "size-allocate: ", widget.allocation
-        self.mapnik.resize(widget.allocation)
+        self.map.resize(widget.allocation)
         
         self.statusbar.push(0, "Map image dimension: " + str(widget.allocation))
                 

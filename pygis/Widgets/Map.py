@@ -6,23 +6,82 @@ import mapnik
 
 """
 Map widget implemented using mapnik
+
+TODO: Make map image generation work in a separate thread
 """
-class Map(gtk.Image):
+class Map(gtk.EventBox):
 
     """
     Construct the image and map with initial values and connect to signal to handle resizes
     """
     def __init__(self):
-        gtk.Image.__init__(self)
+        gtk.EventBox.__init__(self)
+        
+        self.fixed = gtk.Fixed()
+        
+        self.add(self.fixed)
 
-        self.width = 1
-        self.height = 1
+        self.image = gtk.Image()
+        
+        self.fixed.put(self.image, 0, 0) 
+
+        self.add_events(gtk.gdk.KEY_PRESS_MASK |
+              gtk.gdk.POINTER_MOTION_MASK |
+              gtk.gdk.BUTTON_PRESS_MASK |
+              gtk.gdk.BUTTON_RELEASE_MASK)
+        
+        self.connect("motion-notify-event", self.motionnotify)
+        self.connect("key-press-event", self.keypress)
+        self.connect("button-press-event", self.buttonpress)
+        self.connect("button-release-event", self.buttonrelease)
+        
+        self.width = 200
+        self.height = 200
+        
+        self.drag = False
         
         self.map = mapnik.Map(self.width, self.height, '+proj=latlong +datum=WGS84')
         self.map.background = mapnik.Color('steelblue')
 
         self.createstyle()
+        
+        self.map.zoom_all()
+        self.envelope = self.map.envelope()
         self.rendermap()
+    
+    def motionnotify(self, widget, event):
+        if self.drag == True:
+            self.dx = event.x - self.x
+            self.dy = event.y - self.y
+            self.fixed.move(self.image, int(self.dx), int(self.dy))
+    
+    def keypress(self, widget):
+        print "Not implemented"
+        
+    def buttonpress(self, widget, event):
+        if event.button == 1:
+            self.x = event.x
+            self.y = event.y
+            self.drag = True
+        
+    def unitperpixel(self):
+        unitwidth = self.envelope.maxx - self.envelope.minx
+        unitperpixel = unitwidth / self.width
+        return unitperpixel
+    
+    def buttonrelease(self, widget, event):
+        if event.button == 1:
+            self.drag = False
+            self.fixed.move(self.image, 0, 0)
+            
+            minx = self.envelope.minx - self.dx * self.unitperpixel()
+            maxx = self.envelope.maxx - self.dx * self.unitperpixel()
+            miny = self.envelope.miny + self.dy * self.unitperpixel()
+            maxy = self.envelope.maxy + self.dy * self.unitperpixel()
+            self.envelope = mapnik.Envelope(minx, miny, maxx, maxy)
+            
+            self.map.zoom_to_box(self.envelope)
+            self.rendermap()
 
     """
     Resize the map by zooming to the new dimensions then call render
@@ -34,9 +93,13 @@ class Map(gtk.Image):
         self.height = rectangle.height
         self.map.width = self.width
         self.map.height = self.height
+        self.map.zoom_to_box(self.envelope)
+        self.envelope = self.map.envelope()
+        self.rendermap()
         
-        self.map.zoom_to_box(self.lyr.envelope())
-        
+    def zoomin(self):
+        self.map.zoom(0.5)
+        self.envelope = self.map.envelope()
         self.rendermap()
     
     """
@@ -47,7 +110,7 @@ class Map(gtk.Image):
         mapnik.render(self.map, aggimage, 0, 0)
         data = aggimage.tostring()
         pixbuf = gtk.gdk.pixbuf_new_from_data(data, gtk.gdk.COLORSPACE_RGB, True, 8, self.map.width, self.map.height, self.map.width * 4)
-        self.set_from_pixbuf(pixbuf)
+        self.image.set_from_pixbuf(pixbuf)
     
     """
     Create style and layer for the map from mapnik tutorial data
