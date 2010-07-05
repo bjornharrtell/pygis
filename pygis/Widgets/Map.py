@@ -17,7 +17,7 @@ class Map(gtk.EventBox):
     def __init__(self):
         gtk.EventBox.__init__(self)
         
-        self.fixed = gtk.Layout()
+        self.fixed = gtk.Fixed()
         
         self.add(self.fixed)
 
