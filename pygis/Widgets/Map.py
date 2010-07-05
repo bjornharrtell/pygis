@@ -17,7 +17,7 @@ class Map(gtk.EventBox):
     def __init__(self):
         gtk.EventBox.__init__(self)
         
-        self.fixed = gtk.Fixed()
+        self.fixed = gtk.Layout()
         
         self.add(self.fixed)
 
@@ -35,8 +35,8 @@ class Map(gtk.EventBox):
         self.connect("button-press-event", self.buttonpress)
         self.connect("button-release-event", self.buttonrelease)
         
-        self.width = 200
-        self.height = 200
+        self.width = 400
+        self.height = 300
         
         self.drag = False
         
@@ -46,6 +46,7 @@ class Map(gtk.EventBox):
         self.createstyle()
         
         self.map.zoom_all()
+        self.map.zoom(0.2)
         self.envelope = self.map.envelope()
         self.rendermap()
     
@@ -84,18 +85,31 @@ class Map(gtk.EventBox):
             self.rendermap()
 
     """
-    Resize the map by zooming to the new dimensions then call render
+    Resize the map by zooming to the new dimension then call render
     """
     def resize(self, rectangle):
         if self.width == rectangle.width and self.height == rectangle.height: return
         
+        dx = rectangle.width - self.width
+        dy = rectangle.height - self.height
+        
+        minx = self.envelope.minx
+        maxx = self.envelope.maxx + dx * self.unitperpixel()
+        miny = self.envelope.miny - dy * self.unitperpixel()
+        maxy = self.envelope.maxy
+        
+        self.envelope = mapnik.Envelope(minx, miny, maxx, maxy)
+        
         self.width = rectangle.width
         self.height = rectangle.height
+        
         self.map.width = self.width
         self.map.height = self.height
         self.map.zoom_to_box(self.envelope)
         self.envelope = self.map.envelope()
+        self.fixed.move(self.image, 0, 0)
         self.rendermap()
+        self.fixed.move(self.image, 0, 0)
         
     def zoomin(self):
         self.map.zoom(0.5)
@@ -119,7 +133,7 @@ class Map(gtk.EventBox):
         s = mapnik.Style()
         r = mapnik.Rule()
         r.symbols.append(mapnik.PolygonSymbolizer(mapnik.Color('#f2eff9')))
-        r.symbols.append(mapnik.LineSymbolizer(mapnik.Color('rgb(50%,50%,50%)'),0.1))
+        r.symbols.append(mapnik.LineSymbolizer(mapnik.Color('rgb(50%,50%,50%)'),0))
         s.rules.append(r)
         self.map.append_style('My Style',s)
 
