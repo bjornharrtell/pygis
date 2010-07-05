@@ -54,8 +54,6 @@ class Client(gtk.Window):
 
     def onsizeallocate(self, widget, event):
         #print "size-allocate: ", widget.allocation
-        self.map.resize(widget.allocation)
-        
         self.statusbar.push(0, "Map image dimension: " + str(widget.allocation))
                 
     def destroy(self, widget):
